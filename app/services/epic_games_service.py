@@ -19,6 +19,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt
 from models import OrderItem, Order
 from models import PromotionGame
 from settings import settings, RUNTIME_DIR
+from services.notification_service import MicrosoftMailClient
 
 URL_CLAIM = "https://store.epicgames.com/en-US/free-games"
 URL_LOGIN = (
@@ -137,6 +138,19 @@ class EpicAgent:
         # 正交数据，得到还未收集的优惠商品
         self._promotions = [p for p in get_promotions() if p.namespace not in self._namespaces]
 
+    async def _notify_promotions(self):
+        if not settings.microsoft_mail_configured:
+            logger.debug("Microsoft mail notification is not configured")
+            return
+        if not self._promotions:
+            return
+
+        try:
+            client = MicrosoftMailClient.from_settings(settings)
+            await client.send_promotions(self._promotions)
+        except Exception as err:
+            logger.warning("Failed to send Microsoft mail notification", err=err)
+
     async def _should_ignore_task(self) -> bool:
         self._ctx_cookies_is_available = False
 
@@ -180,6 +194,8 @@ class EpicAgent:
         if not self._promotions:
             logger.success("All week-free games are already in the library")
             return
+
+        await self._notify_promotions()
 
         game_promotions = []
         bundle_promotions = []
