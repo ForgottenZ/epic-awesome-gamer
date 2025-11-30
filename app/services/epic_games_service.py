@@ -16,6 +16,7 @@ from playwright.async_api import Page
 from playwright.async_api import expect, TimeoutError, FrameLocator
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
+from extensions.ms_graph_mailer import ms_mailer
 from models import OrderItem, Order
 from models import PromotionGame
 from settings import settings, RUNTIME_DIR
@@ -171,6 +172,9 @@ class EpicAgent:
 
         # 刷新浏览器身份信息
         if not self._ctx_cookies_is_available:
+            promotions = get_promotions()
+            if promotions:
+                await ms_mailer.send_free_game_digest(promotions)
             return
 
         # 加载正交的优惠商品数据

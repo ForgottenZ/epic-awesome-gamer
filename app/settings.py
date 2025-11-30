@@ -71,6 +71,32 @@ class EpicSettings(AgentConfig):
         description="Celery task soft time limit in seconds",
     )
 
+    # Microsoft Graph mailer settings
+    MS_CLIENT_ID: str | None = Field(
+        default_factory=lambda: os.getenv("MS_CLIENT_ID"),
+        description="Azure application (client) ID for Microsoft Graph OAuth",
+    )
+
+    MS_CLIENT_SECRET: SecretStr | None = Field(
+        default_factory=lambda: os.getenv("MS_CLIENT_SECRET"),
+        description="Client secret for Microsoft Graph OAuth",
+    )
+
+    MS_TENANT_ID: str | None = Field(
+        default_factory=lambda: os.getenv("MS_TENANT_ID"),
+        description="Azure tenant ID for Microsoft Graph OAuth",
+    )
+
+    MS_SENDER_ADDRESS: str | None = Field(
+        default_factory=lambda: os.getenv("MS_SENDER_ADDRESS"),
+        description="Email address (or user principal name) used to send Microsoft mail",
+    )
+
+    MS_RECIPIENT_ADDRESS: str | None = Field(
+        default_factory=lambda: os.getenv("MS_RECIPIENT_ADDRESS"),
+        description="Recipient address for Microsoft mail digests",
+    )
+
     # APPRISE_SERVERS: str | None = Field(
     #     default="", description="System notification by Apprise\nhttps://github.com/caronc/apprise"
     # )
