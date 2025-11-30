@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 from hcaptcha_challenger.agent import AgentConfig
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).parent
@@ -100,6 +100,36 @@ class EpicSettings(AgentConfig):
     # APPRISE_SERVERS: str | None = Field(
     #     default="", description="System notification by Apprise\nhttps://github.com/caronc/apprise"
     # )
+
+    # Microsoft mail OAuth settings
+    MS_TENANT_ID: str | None = Field(default=None, description="Microsoft Entra tenant ID")
+    MS_CLIENT_ID: str | None = Field(default=None, description="Microsoft Entra application (client) ID")
+    MS_CLIENT_SECRET: SecretStr | None = Field(default=None, description="Client secret for OAuth")
+    MS_SENDER: str | None = Field(default=None, description="Mailbox address used to send notifications")
+    MS_RECIPIENTS: list[str] = Field(
+        default_factory=list,
+        description="Comma-separated email list that will receive free game notifications",
+    )
+
+    @field_validator("MS_RECIPIENTS", mode="before")
+    @classmethod
+    def parse_ms_recipients(cls, value: str | list[str] | None) -> list[str]:
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return value
+
+    @property
+    def microsoft_mail_configured(self) -> bool:
+        required = [
+            self.MS_TENANT_ID,
+            self.MS_CLIENT_ID,
+            self.MS_CLIENT_SECRET,
+            self.MS_SENDER,
+            self.MS_RECIPIENTS,
+        ]
+        return all(required)
 
     @property
     def user_data_dir(self) -> Path:
