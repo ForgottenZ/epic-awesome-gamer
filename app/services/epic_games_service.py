@@ -274,8 +274,14 @@ class EpicGames:
 
             # 检查是否为免费游戏
             purchase_btn = page.locator("//aside//button[@data-testid='purchase-cta-button']")
-            purchase_status = await purchase_btn.text_content()
-            if "Buy Now" in purchase_status or "Get" not in purchase_status:
+            try:
+                await expect(purchase_btn).to_be_visible(timeout=15000)
+                purchase_status = await purchase_btn.text_content()
+            except TimeoutError:
+                logger.warning(f"Purchase button not available - {url=}")
+                continue
+
+            if not purchase_status or "Buy Now" in purchase_status or "Get" not in purchase_status:
                 logger.warning(f"Not available for purchase - {url=}")
                 continue
 
